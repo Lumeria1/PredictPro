@@ -1,0 +1,88 @@
+# Python virtual environments
+venv/
+env/
+.env/
+.venv/
+ENV/
+pythonenv*/
+
+# Python bytecode and cache
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Log files
+*.log
+logs/
+
+# Database files
+*.sqlite3
+*.db
+
+# Local configuration
+.env
+.env.local
+.env.*
+!.env.example
+
+# Docker
+.dockerignore
+docker-compose.override.yml
+
+# IDE specific files
+# VS Code
+.vscode/
+.history/
+
+# PyCharm/IntelliJ
+.idea/
+*.iml
+*.iws
+*.ipr
+out/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# Linux
+*~
+.directory
+.Trash-*
+
+# Temporary files
+tmp/
+temp/

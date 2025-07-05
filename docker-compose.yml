@@ -1,0 +1,67 @@
+services:
+  api:
+    build: .
+    ports:
+      - "8000:8000"
+    command:
+      [
+        "uvicorn",
+        "app.main:app",
+        "--host",
+        "0.0.0.0",
+        "--port",
+        "8000",
+        "--reload",
+      ]
+    depends_on:
+      - db
+      - redis
+    environment:
+      - SERVICE_TYPE=api
+      - DATABASE_URL=postgresql://user:pass@db:5432/football
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - API_FOOTBALL_KEY=${API_FOOTBALL_KEY}
+    develop: # <-- Add this section for watch mode
+      watch:
+        - action: sync
+          path: ./app # Directory with your Python code
+          target: /app # Target path in the container
+          ignore:
+            - __pycache__
+        - action: rebuild
+          path: requirements.txt # Rebuild if dependencies change
+
+  worker:
+    build: .
+    command: ["celery", "-A", "app.tasks.celery", "worker", "--loglevel=info"]
+    depends_on:
+      - db
+      - redis
+    environment:
+      - DATABASE_URL=postgresql://user:pass@db:5432/football
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - API_FOOTBALL_KEY=${API_FOOTBALL_KEY}
+    develop: # <-- Add watch for the worker too
+      watch:
+        - action: sync
+          path: ./app
+          target: /app
+          ignore:
+            - __pycache__
+        - action: rebuild
+          path: requirements.txt
+
+  db:
+    image: postgres:15
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: pass
+      POSTGRES_DB: football
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  redis:
+    image: redis:7
+
+volumes:
+  pgdata:
