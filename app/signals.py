@@ -796,7 +796,7 @@ def compute_home_pressure_signal(fixture, db_session):
         value = 0
     # Print the final status
     print(f"\n🏁 Home Pressure Start signal → Status={status}, Note='{note}'\n")
-    return status, note, value  # Returning losses as value for consistency
+    return status, value, note  # Returning losses as value for consistency
 
 # LINEUPS SIGNAL = 12
 def compute_lineups_signal(fixture, db_session):
