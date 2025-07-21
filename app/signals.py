@@ -716,7 +716,7 @@ def compute_fast_starters_signal(fixture, db_session):
         value = home_scored_count + away_scored_count  # Total goals scored in first half
 
     print(f"\n🏁 Fast Starters signal → Status={status}, Note='{note}'\n")
-    return status, note, value  
+    return status, value, note  
 
 # HOME PRESSURE START SIGNAL = 11
 def compute_home_pressure_signal(fixture, db_session):
