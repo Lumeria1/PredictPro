@@ -814,7 +814,7 @@ def compute_lineups_signal(fixture, db_session):
         # More than 1h until kick-off → Neutral
         print("⚠️ More than 1 hour until kickoff → lineups not yet published")
         print("\n🏁 Lineups signal → Status=-, Note='Too early for lineups'\n")
-        return
+        return "-", None, "Too early for lineups"
 
     # 3) Fetch lineups
     lineups = get_lineups_for_fixture(fixture.home_team_api_id)  # pass in fixture id below
@@ -842,7 +842,7 @@ def compute_lineups_signal(fixture, db_session):
         # Lineups published but no entry for home team → Neutral
         print("⚠️ Lineups published but home team entry missing → cannot decide")
         print("\n🏁 Lineups signal → Status=-, Note='Home lineup not found'\n")
-        return
+        return "-", None, "Home lineup not found"
 
     # 4) Determine status
     count_starters = len(home_lineup)
