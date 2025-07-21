@@ -882,7 +882,7 @@ SIGNAL_HANDLERS = {
     SignalID.HOME_AWAY_STRENGTH: compute_home_away_strength_signal,
     SignalID.LEAGUE_STAKES: compute_league_stakes_signal,
     SignalID.BOUNCE_BACK: compute_bounce_back_signal,
-    SignalID.HOME_PRESSURE: compute_home_pressure_signal,
+    SignalID.HOME_PRESSURE: compute_momentum_pressure_signal,
     SignalID.FIRST_HALF_GOAL_TIMING: compute_1h_goal_timing_signal,
     SignalID.FIRST_HALF_OVER05: compute_1h_over05_signal,
     SignalID.FAST_STARTERS: compute_fast_starters_signal,
