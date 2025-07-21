@@ -862,7 +862,7 @@ def compute_lineups_signal(fixture, db_session):
     # Print the final status
     print(f"\n▶️ Home starting XI count: {count_starters}")
     print(f"\n🏁 Lineups signal → Status={status}, Note='{note}'\n")
-    return status, note, value  # Returning count as value for consistency
+    return status, value, note  # Returning count as value for consistency
 
 
 
