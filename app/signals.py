@@ -384,66 +384,84 @@ def compute_bounce_back_signal(fixture, db_session):
     return status, value, note
 
 # MOTIVATIONS: HOME PRESSURE START = 7
-def compute_home_pressure_signal(fixture, db_session):
+def compute_momentum_pressure_signal(fixture, db_session):
+    """
+    Signal 8: Motivation – Momentum/Pressure
+
+    - Green ("Y") if:
+        * Home team's first home match this season ("home-opener")
+        * OR home team is on a 3+ match unbeaten run (win/draw, last 3 matches, any venue)
+    - Neutral ("-") if less than 3 played matches
+    - Otherwise Neutral ("-")
+    """
     # 1) Infer season
     ko = fixture.kickoff
     season = infer_season(fixture.league_api_id, ko)
     if not season:
-        print("❌ Could not infer season from kickoff date")
-        sys.exit(1)
+        return "-", 0, "Could not infer season from kickoff date"
 
-    # 2) Fetch last 3 fixtures (home OR away) for the home team
-    last3 = get_last_n_team_fixtures(fixture.home_team_api_id, fixture.league_api_id, season, n=3)
-    print(f"\n🚩 Season: {season}")
-    print(f"▶️ Home team last {len(last3)} fixtures:")
-    for f in last3:
-        dt = f["fixture"]["date"]
-        g  = f["goals"]
-        print(f"   • {dt}  {f['teams']['home']['id']} vs {f['teams']['away']['id']}  Score: {g['home']}-{g['away']}  ID={f['fixture']['id']}")
+    # 2) Check for Home-Opener: No previous home matches played
+    last_fixtures = get_last_n_team_fixtures(fixture.home_team_api_id, fixture.league_api_id, season, n=20)
+    prior_home = []
+    for f in last_fixtures:
+        goals = f.get("goals", {})
+        if goals.get("home") is None or goals.get("away") is None:
+            continue
+        if f["teams"]["home"]["id"] != fixture.home_team_api_id:
+            continue
+        # Compare fixture date to kickoff
+        api_dt = datetime.fromisoformat(f["fixture"]["date"])
+        fixture_dt = api_dt.replace(tzinfo=None)
+        if fixture_dt < fixture.kickoff.replace(tzinfo=None):
+            prior_home.append(f)
+    if not prior_home:
+        status = "Y"
+        note = "Home-opener: No previous home matches this season"
+        value = 1
+        return status, value, note
 
-    if len(last3) < 3:
-        print("⚠️ Insufficient fixtures (need 3).")
-        print("\n🏁 Home Pressure Start signal → Status=-, Note='Insufficient data'\n")
-        return
+    # 3) Check for Unbeaten Run ≥ 3 for Home Team
+    last5 = get_last_n_team_fixtures(fixture.home_team_api_id, fixture.league_api_id, season, n=5)
+    played_fixtures = [
+        f for f in last5
+        if f.get("goals", {}).get("home") is not None
+           and f.get("goals", {}).get("away") is not None
+    ]
+    if len(played_fixtures) < 3:
+        status = "-"
+        note = "Less than 3 played matches → cannot assess unbeaten run"
+        value = 0
+        return status, value, note
 
-    # 3) Determine results for each of the 3 matches from home team's perspective
-    losses = 0
-    wins   = 0
-    for f in last3:
+    unbeaten_count = 0
+    # API returns fixtures in date descending order (most recent first)
+    for f in played_fixtures[:3]:
         goals = f.get("goals", {})
         home_id_prev = f["teams"]["home"]["id"]
         away_id_prev = f["teams"]["away"]["id"]
-        home_goals   = goals.get("home", 0)
-        away_goals   = goals.get("away", 0)
+        home_goals   = goals["home"]
+        away_goals   = goals["away"]
 
+        # Determine result from home team's perspective
         if home_id_prev == fixture.home_team_api_id:
-            margin = home_goals - away_goals
+            if home_goals >= away_goals:
+                unbeaten_count += 1
         else:
-            margin = away_goals - home_goals
+            if away_goals >= home_goals:
+                unbeaten_count += 1
 
-        if margin < 0:
-            losses += 1
-        elif margin > 0:
-            wins += 1
-        # Draws (margin == 0) count toward neither wins nor losses
-
-    # 4) Determine status: 
-    #    Green if losses ≥ 2, Red if wins == 3, Neutral otherwise
-    if losses >= 2:
+    if unbeaten_count >= 3:
         status = "Y"
-        note = f"Lost {losses}/3 → High pressure (Green)"
-        value = losses  # Not used, but keeping for consistency
-    elif wins == 3:
-        status = "N"
-        note = f"Won all 3 → No pressure (Red)"
-        value = wins
-    else:
-        status = "-"
-        note = f"Wins={wins}, Losses={losses} → Neutral"
-        value = 0
+        note = "Home team is on a 3-match unbeaten run"
+        value = unbeaten_count
+        return status, value, note
 
-    print(f"\n🏁 Home Pressure Start signal → Status={status}, Note='{note}'\n")
-    return status, value, note 
+    # 4) Otherwise: Neutral
+    status = "-"
+    note = "No unbeaten run ≥3 and not a home-opener → Neutral"
+    value = 0
+    return status, value, note
+
 
 # FIRST HALF GOAL TIMING SIGNAL = 8
 def compute_1h_goal_timing_signal(fixture, db_session):
